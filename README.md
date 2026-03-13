@@ -149,8 +149,3 @@ MIT License - free to use in academic/commercial projects.
 M.Victor Paul
 CSE_AIML
 mvictorpaul07@gmail.com | https://www.linkedin.com/in/victorpaulm
-
-***
-
-**⭐ Star this repo if you found it helpful!**  
-**Built with ❤️ during Edubot Technologies Internship**
