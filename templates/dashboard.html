@@ -42,17 +42,23 @@
                     <input type="number" id="activity_min" name="activity_min" min="0" value="30" required>
                 </div>
                 <div>
-                    <label for="stress">Stress Level (1-10) *</label>
+                    <label for="stress">Stress: Low(1-3) Medium (4-7) High (8-10)</label>
                     <input type="number" id="stress" name="stress" min="1" max="10" value="5" required>
+                    <small id="stressRangeLabel" class="stress-range-label">Stress Category: Medium (4-7)</small>
                 </div>
                 <div>
-                    <label for="bmi_category">BMI Category *</label>
-                    <select id="bmi_category" name="bmi_category" required>
-                        <option value="Normal">Normal</option>
-                        <option value="Overweight">Overweight</option>
-                        <option value="Obese">Obese</option>
-                        <option value="Underweight">Underweight</option>
-                    </select>
+                    <label for="height_cm">Height (cm) *</label>
+                    <input type="number" id="height_cm" min="100" max="250" step="0.1" value="170" required>
+                </div>
+                <div>
+                    <label for="weight_kg">Weight (kg) *</label>
+                    <input type="number" id="weight_kg" min="20" max="300" step="0.1" value="65" required>
+                </div>
+                <div>
+                    <label for="bmi_category_display">BMI Category (Auto) *</label>
+                    <input type="text" id="bmi_category_display" value="Normal" readonly>
+                    <input type="hidden" id="bmi_category" name="bmi_category" value="Normal">
+                    <small id="bmiInfo" class="bmi-info">BMI: 22.5 (Normal)</small>
                 </div>
                 <div>
                     <label for="blood_pressure">Systolic Blood Pressure (mmHg) *</label>
@@ -146,6 +152,41 @@
                     </div>
                     {% endfor %}
                 </div>
+            </div>
+
+            <div class="suggestions-section">
+                <h3>Suggestions to Reduce Risk</h3>
+                {% if results.risk.risk == 'Insomnia' %}
+                <div class="suggestion-card">
+                    <ul class="suggestion-list">
+                        <li>Follow a fixed sleep and wake schedule every day, including weekends.</li>
+                        <li>Avoid caffeine, nicotine, and heavy meals for at least 4-6 hours before bedtime.</li>
+                        <li>Limit screen exposure 60 minutes before sleep and keep the bedroom dark and cool.</li>
+                        <li>Use stress-reduction routines such as breathing exercises, journaling, or meditation.</li>
+                        <li>Consult a sleep specialist if symptoms continue for more than 2-3 weeks.</li>
+                    </ul>
+                </div>
+                {% elif results.risk.risk == 'Sleep Apnea' %}
+                <div class="suggestion-card">
+                    <ul class="suggestion-list">
+                        <li>Maintain a healthy body weight and continue regular physical activity.</li>
+                        <li>Avoid alcohol or sedatives near bedtime, as they can worsen airway collapse.</li>
+                        <li>Prefer side sleeping instead of sleeping on your back when possible.</li>
+                        <li>Track symptoms such as loud snoring, morning headaches, and daytime sleepiness.</li>
+                        <li>Seek clinical evaluation for a formal sleep study and treatment options (for example CPAP).</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="suggestion-card">
+                    <ul class="suggestion-list">
+                        <li>Keep a consistent sleep routine with 7-9 hours of sleep opportunity nightly.</li>
+                        <li>Exercise regularly and maintain balanced nutrition to support sleep quality.</li>
+                        <li>Reduce stress using relaxation techniques and a structured bedtime wind-down.</li>
+                        <li>Limit caffeine late in the day and avoid heavy meals close to bedtime.</li>
+                        <li>Consult a healthcare professional for persistent symptoms or worsening sleep quality.</li>
+                    </ul>
+                </div>
+                {% endif %}
             </div>
             {% else %}
             <!-- SHOW HEALTHY IMPROVEMENTS -->
@@ -242,6 +283,64 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
 
     setTimeout(() => clearInterval(interval), 3000);
 });
+
+const stressInput = document.getElementById('stress');
+const stressRangeLabel = document.getElementById('stressRangeLabel');
+const heightInput = document.getElementById('height_cm');
+const weightInput = document.getElementById('weight_kg');
+const bmiCategoryInput = document.getElementById('bmi_category');
+const bmiCategoryDisplay = document.getElementById('bmi_category_display');
+const bmiInfo = document.getElementById('bmiInfo');
+
+function updateStressRangeLabel() {
+    const stressValue = Number(stressInput.value);
+
+    if (stressValue >= 1 && stressValue <= 3) {
+        stressRangeLabel.textContent = 'Stress Category: Low (1-3)';
+    } else if (stressValue >= 4 && stressValue <= 7) {
+        stressRangeLabel.textContent = 'Stress Category: Medium (4-7)';
+    } else if (stressValue >= 8 && stressValue <= 10) {
+        stressRangeLabel.textContent = 'Stress Category: High (8-10)';
+    } else {
+        stressRangeLabel.textContent = 'Stress Category: Enter value between 1 and 10';
+    }
+}
+
+stressInput.addEventListener('input', updateStressRangeLabel);
+updateStressRangeLabel();
+
+function updateBmiCategory() {
+    const heightCm = Number(heightInput.value);
+    const weightKg = Number(weightInput.value);
+
+    if (!heightCm || !weightKg || heightCm <= 0 || weightKg <= 0) {
+        bmiCategoryInput.value = 'Normal';
+        bmiCategoryDisplay.value = 'Normal';
+        bmiInfo.textContent = 'BMI: Enter valid height and weight';
+        return;
+    }
+
+    const bmi = weightKg / Math.pow(heightCm / 100, 2);
+    let category = 'Normal';
+
+    if (bmi < 18.5) {
+        category = 'Underweight';
+    } else if (bmi < 25) {
+        category = 'Normal';
+    } else if (bmi < 30) {
+        category = 'Overweight';
+    } else {
+        category = 'Obese';
+    }
+
+    bmiCategoryInput.value = category;
+    bmiCategoryDisplay.value = category;
+    bmiInfo.textContent = `BMI: ${bmi.toFixed(1)} (${category})`;
+}
+
+heightInput.addEventListener('input', updateBmiCategory);
+weightInput.addEventListener('input', updateBmiCategory);
+updateBmiCategory();
 </script>
 
 <style>
@@ -385,6 +484,32 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
     font-weight: 600;
 }
 
+/* SUGGESTIONS SECTION */
+.suggestions-section {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #eaf4ff, #dceeff);
+    border-radius: 15px;
+}
+.suggestions-section h3 {
+    color: #1f4e79;
+    margin-bottom: 1rem;
+    font-size: 1.3em;
+}
+.suggestion-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border-left: 5px solid #3498db;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 1.2rem 1.4rem;
+}
+.suggestion-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #2c3e50;
+    line-height: 1.6;
+}
+
 /* HEALTHY SECTION */
 .healthy-section {
     margin-top: 2rem;
@@ -459,6 +584,18 @@ document.getElementById('analysisForm').addEventListener('submit', function(e) {
 .habit-item strong {
     font-size: 1.1em;
     color: #2c3e50;
+}
+.stress-range-label {
+    display: block;
+    margin-top: 0.4rem;
+    color: #5d6d7e;
+    font-weight: 600;
+}
+.bmi-info {
+    display: block;
+    margin-top: 0.4rem;
+    color: #5d6d7e;
+    font-weight: 600;
 }
 
 .results-content {
