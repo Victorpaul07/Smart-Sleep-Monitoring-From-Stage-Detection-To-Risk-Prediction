@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Smart Sleep Monitoring{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .logo:hover {
+            color: #3498db;
+        }
+        .nav-links {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 2rem;
+        }
+        .nav-links a {
+            color: #34495e;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-links a:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* FLASH MESSAGES */
+        .flash-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        .flash-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+            color: white;
+            font-weight: 500;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .flash-success { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .flash-error { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .flash-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .flash-info { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .flash-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        .flash-close:hover { opacity: 1; }
+
+        /* PAGE CONTENT */
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 0 1.5rem;
+        }
+        .panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 1rem 0;
+            font-size: 2.8em;
+        }
+        .panel h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .panel h3 {
+            color: #34495e;
+            margin-top: 1.5rem;
+        }
+
+        /* FORM ELEMENTS */
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.9em;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #fafbfc;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+            background: white;
+        }
+        input:invalid:not(:placeholder-shown), select:invalid {
+            border-color: #e74c3c;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .psg-upload {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        input[type="file"] {
+            padding: 15px;
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(52,152,219,0.4);
+        }
+        button:active { transform: translateY(-1px); }
+
+        /* ERROR MESSAGE */
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 5px solid #e74c3c;
+            grid-column: 1 / -1;
+        }
+
+        /* RESULTS STYLES */
+        .results { animation: slideIn 0.5s; }
+        .dominant-card {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 15px 35px rgba(243,156,18,0.4);
+        }
+        .stat-number { font-size: 3.5em; font-weight: 700; margin-bottom: 0.5rem; }
+        .stat-subtitle { font-size: 1.3em; opacity: 0.95; }
+
+        .risk-card {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .risk-card-healthy {
+            background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+        }
+        .risk-prob { font-size: 2.5em; font-weight: 700; }
+
+        .distribution-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .distribution-table th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 1rem 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .distribution-table td {
+            padding: 1rem 1rem;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .distribution-table tr:hover td { background: #f8f9fa; }
+        .dominant-row {
+            background: linear-gradient(90deg, #fff4d6, #ffeaa7) !important;
+            font-weight: 700;
+            font-size: 1.02em;
+        }
+
+        .no-results, .welcome-placeholder {
+            text-align: center;
+            color: #7f8c8d;
+            padding-top: 4rem;
+        }
+        .no-results h3, .welcome-placeholder h3 {
+            color: #34495e;
+            margin-bottom: 1rem;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; gap: 1.5rem; }
+            h1 { font-size: 2.2em; }
+            .form-grid { grid-template-columns: 1fr; }
+            .stat-number { font-size: 2.5em; }
+            .nav-links { gap: 1rem; font-size: 0.9em; }
+            .flash-container { right: 10px; max-width: calc(100% - 20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') if 'user_id' in session else url_for('index') }}" class="logo">
+                <i class="fas fa-brain"></i> SleepAI
+            </a>
+            {% if 'user_id' in session %}
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> My Profile</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+            {% else %}
+            <ul class="nav-links">
+                <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a></li>
+            </ul>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' if category == 'info' else 'times-circle' }}"></i>
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => msg.remove(), 300);
+                }, 5000);
+            });
+        });
+
+        // Slide out animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

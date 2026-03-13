@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>My Profile</h1>
+
+<div class="profile-container">
+    <!-- PROFILE INFO CARD -->
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="profile-info">
+                <h2>{{ user['full_name'] or user['username'] }}</h2>
+                <p>@{{ user['username'] }}</p>
+                <small>Member since {{ user['created_at'][:10] }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT PROFILE FORM -->
+    <div class="profile-section">
+        <h3>Personal Information</h3>
+        <form method="POST" class="profile-form">
+            <input type="hidden" name="action" value="update_profile">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name"
+                           value="{{ user['full_name'] or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email"
+                           value="{{ user['email'] }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" name="age" min="18" max="120"
+                           value="{{ user['age'] or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender">
+                        <option value="Male" {% if user['gender'] == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if user['gender'] == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if user['gender'] == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone"
+                           value="{{ user['phone'] or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Last Login</label>
+                    <input type="text" value="{{ user['last_login'][:16] if user['last_login'] else 'Never' }}" disabled>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Update Profile</button>
+        </form>
+    </div>
+
+    <!-- CHANGE PASSWORD SECTION -->
+    <div class="profile-section">
+        <h3>Change Password</h3>
+        <form method="POST" class="profile-form">
+            <input type="hidden" name="action" value="change_password">
+
+            <div class="form-group">
+                <label for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password"
+                       placeholder="Enter current password" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password"
+                           placeholder="Minimum 6 characters" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           placeholder="Re-enter new password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-secondary">Change Password</button>
+        </form>
+    </div>
+
+    <!-- ACCOUNT STATS -->
+    <div class="profile-section stats-section">
+        <h3>Account Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-calendar-alt"></i>
+                <div>
+                    <strong>{{ ((user['last_login'] | string)[:10] if user['last_login'] else user['created_at'][:10]) }}</strong>
+                    <span>Last Activity</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>{{ 'Active' if user['is_active'] else 'Inactive' }}</strong>
+                    <span>Account Status</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Verified</strong>
+                    <span>Account Type</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 4rem;
+}
+
+.profile-info h2 {
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8em;
+}
+
+.profile-info p {
+    color: #7f8c8d;
+    margin: 0 0 0.3rem 0;
+}
+
+.profile-info small {
+    color: #95a5a6;
+}
+
+.profile-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-section h3 {
+    color: #2c3e50;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-form {
+    margin-top: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+    font-size: 0.9em;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 15px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s;
+    background: #fafbfc;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+    background: white;
+}
+
+.form-group input:disabled {
+    background: #ecf0f1;
+    color: #7f8c8d;
+    cursor: not-allowed;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(52,152,219,0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(231,76,60,0.4);
+}
+
+/* STATS SECTION */
+.stats-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.stat-card i {
+    font-size: 2em;
+    color: #3498db;
+}
+
+.stat-card div {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card strong {
+    color: #2c3e50;
+    font-size: 1.1em;
+    margin-bottom: 0.2rem;
+}
+
+.stat-card span {
+    color: #7f8c8d;
+    font-size: 0.85em;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

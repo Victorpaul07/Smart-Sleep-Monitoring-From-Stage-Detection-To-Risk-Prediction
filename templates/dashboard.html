@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Smart Sleep Monitoring Dashboard</h1>
+
+<div class="main-container">
+    <!-- LEFT PANEL: INPUT FORM -->
+    <div class="panel">
+        <h2>PSG File Upload</h2>
+        <form method="POST" enctype="multipart/form-data" id="analysisForm">
+            <div class="psg-upload">
+                <label for="psg_file">PSG EDF File (Optional)</label>
+                <input type="file" id="psg_file" name="psg_file" accept=".edf">
+                <small>Sleep EEG recording for automatic stage analysis</small>
+            </div>
+
+            <h3>Personal & Lifestyle Data</h3>
+
+            <div class="form-grid">
+                <div>
+                    <label for="gender">Gender *</label>
+                    <input type="text" id="gender" name="gender" value="Male" list="gender-list" required>
+                </div>
+                <div>
+                    <label for="age">Age (years) *</label>
+                    <input type="number" id="age" name="age" min="18" max="100" value="30" required>
+                </div>
+                <div>
+                    <label for="occupation">Occupation *</label>
+                    <input type="text" id="occupation" name="occupation" value="Office Worker" list="occupation-list" required>
+                </div>
+                <div>
+                    <label for="sleep_hours">Sleep Duration (hours) *</label>
+                    <input type="number" id="sleep_hours" name="sleep_hours" step="0.1" min="0" max="24" value="7" required>
+                </div>
+                <div>
+                    <label for="sleep_quality">Sleep Quality (1-10) *</label>
+                    <input type="number" id="sleep_quality" name="sleep_quality" min="1" max="10" value="7" required>
+                </div>
+                <div>
+                    <label for="activity_min">Physical Activity (min/day) *</label>
+                    <input type="number" id="activity_min" name="activity_min" min="0" value="30" required>
+                </div>
+                <div>
+                    <label for="stress">Stress Level (1-10) *</label>
+                    <input type="number" id="stress" name="stress" min="1" max="10" value="5" required>
+                </div>
+                <div>
+                    <label for="bmi_category">BMI Category *</label>
+                    <select id="bmi_category" name="bmi_category" required>
+                        <option value="Normal">Normal</option>
+                        <option value="Overweight">Overweight</option>
+                        <option value="Obese">Obese</option>
+                        <option value="Underweight">Underweight</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="blood_pressure">Systolic Blood Pressure (mmHg) *</label>
+                    <input type="number" id="blood_pressure" name="blood_pressure" min="80" max="200" value="120" required>
+                </div>
+                <div>
+                    <label for="heart_rate">Resting Heart Rate (bpm) *</label>
+                    <input type="number" id="heart_rate" name="heart_rate" min="50" max="150" value="72" required>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label for="daily_steps">Daily Steps *</label>
+                    <input type="number" id="daily_steps" name="daily_steps" min="0" value="8000" required>
+                </div>
+            </div>
+
+            <button type="submit">Analyze Sleep Patterns & Health Risks</button>
+        </form>
+
+        <datalist id="gender-list">
+            <option value="Male">
+            <option value="Female">
+        </datalist>
+        <datalist id="occupation-list">
+            <option value="Office Worker">
+            <option value="Manual Labor">
+            <option value="Student">
+            <option value="Retired">
+        </datalist>
+    </div>
+
+    <!-- RIGHT PANEL: RESULTS -->
+    <div class="panel">
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if results %}
+        <div id="resultsContent" class="results-content">
+            {% if results.psg %}
+            <h2>Sleep Stage Analysis</h2>
+            <div class="dominant-card">
+                <div class="stat-number">{{ results.psg.dominant_stage }}</div>
+                <div class="stat-subtitle">Dominant Sleep Stage</div>
+            </div>
+
+            <table class="distribution-table">
+                <thead>
+                    <tr>
+                        <th>Sleep Stage</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stage, count in results.psg.stage_distribution.items() %}
+                    <tr class="{% if stage == results.psg.dominant_stage %}dominant-row{% endif %}">
+                        <td><strong>{{ stage }}</strong></td>
+                        <td style="font-weight: bold;">{{ count }}</td>
+                        <td><span style="color: #27ae60; font-weight: 600;">{{ "%.0f"|format((count / results.psg.total_epochs) * 100) }}%</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if results.risk %}
+            <h2>Health Risk Assessment</h2>
+            <div class="risk-card {% if results.risk.risk == 'None' %}risk-card-healthy{% endif %}">
+                <div class="stat-number risk-name">{{ results.risk.risk }}</div>
+                <div class="stat-subtitle">Predicted Sleep Disorder</div>
+            </div>
+
+            <!-- CONDITIONAL: SHOW RISK FACTORS OR HEALTHY HABITS -->
+            {% if results.risk.risk != 'None' %}
+            <!-- SHOW TOP RISK FACTORS -->
+            <div class="reasons-section">
+                <h3>Top Contributing Risk Factors</h3>
+                <div class="reason-grid">
+                    {% for feature, importance in results.risk.top_global_reasons %}
+                    <div class="reason-card">
+                        <div class="reason-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="reason-content">
+                            <div class="reason-title">{{ feature }}</div>
+                            <div class="reason-bar">
+                                <div class="reason-fill" style="width: {{ (importance * 100)|int }}%"></div>
+                            </div>
+                            <div class="reason-percentage">{{ "%.1f"|format(importance * 100) }}% impact</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <!-- SHOW HEALTHY IMPROVEMENTS -->
+            <div class="healthy-section">
+                <h3>Excellent Sleep Health Status</h3>
+                <div class="healthy-card">
+                    <div class="healthy-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="healthy-content">
+                        <h4>No Sleep Disorder Detected</h4>
+                        <p>Your lifestyle factors indicate healthy sleep patterns. Continue maintaining these habits:</p>
+                        <div class="habits-grid">
+                            <div class="habit-item">
+                                <i class="fas fa-bed"></i>
+                                <span>Sleep Duration</span>
+                                <strong>{{ "%.1f"|format(results.form_data.sleep_hours) }} hours</strong>
+                            </div>
+                            <div class="habit-item">
+                                <i class="fas fa-running"></i>
+                                <span>Physical Activity</span>
+                                <strong>{{ results.form_data.activity_min|int }} min/day</strong>
+                            </div>
+                            <div class="habit-item">
+                                <i class="fas fa-brain"></i>
+                                <span>Stress Level</span>
+                                <strong>{{ results.form_data.stress|int }}/10</strong>
+                            </div>
+                            <div class="habit-item">
+                                <i class="fas fa-star"></i>
+                                <span>Sleep Quality</span>
+                                <strong>{{ results.form_data.sleep_quality|int }}/10</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="welcome-placeholder">
+            <i class="fas fa-chart-line" style="font-size: 4rem; color: #bdc3c7; margin-bottom: 1.5rem;"></i>
+            <h3>Ready for Analysis</h3>
+            <p>Fill the form and optionally upload PSG data to receive<br>comprehensive sleep analysis and personalized health insights</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- FULL SCREEN LOADING OVERLAY -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Processing Your Data</h3>
+        <p id="loadingText">Analyzing sleep patterns and health metrics...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <small id="progressPercent">0%</small>
+    </div>
+</div>
+
+<script>
+document.getElementById('analysisForm').addEventListener('submit', function(e) {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.style.display = 'flex';
+
+    let progress = 0;
+    const fill = document.getElementById('progressFill');
+    const percent = document.getElementById('progressPercent');
+    const text = document.getElementById('loadingText');
+
+    const messages = [
+        'Analyzing sleep patterns...',
+        'Processing lifestyle data...',
+        'Running AI prediction models...',
+        'Generating personalized insights...'
+    ];
+    let msgIndex = 0;
+
+    const interval = setInterval(() => {
+        progress += Math.random() * 10 + 3;
+        if (progress > 95) progress = 95;
+
+        fill.style.width = progress + '%';
+        percent.textContent = Math.round(progress) + '%';
+
+        if (progress > msgIndex * 25 && msgIndex < messages.length) {
+            text.textContent = messages[msgIndex];
+            msgIndex++;
+        }
+    }, 200);
+
+    setTimeout(() => clearInterval(interval), 3000);
+});
+</script>
+
+<style>
+/* FULL SCREEN LOADER */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.loading-content {
+    text-align: center;
+    color: #f5f7fa;
+    max-width: 400px;
+    padding: 2rem;
+}
+.spinner {
+    width: 80px;
+    height: 80px;
+    border: 8px solid rgba(245, 247, 250, 0.25);
+    border-top: 8px solid #49c3ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 2rem;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.loading-content h3 {
+    font-size: 1.8em;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+.loading-content p {
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #49c3ff, #1f9dff);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+    box-shadow: 0 0 16px rgba(73, 195, 255, 0.5);
+}
+#progressPercent {
+    font-size: 1.2em;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* RISK CARD VARIANTS */
+.risk-card-healthy {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+}
+
+/* RISK FACTORS SECTION */
+.reasons-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fee, #fdd);
+    border-radius: 15px;
+}
+.reasons-section h3 {
+    color: #c0392b;
+    margin-bottom: 1.5rem;
+    font-size: 1.3em;
+}
+.reason-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+.reason-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.2rem;
+    background: white;
+    border-radius: 12px;
+    border-left: 5px solid #e74c3c;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.reason-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.reason-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-radius: 10px;
+    color: white;
+    font-size: 1.3em;
+    flex-shrink: 0;
+}
+.reason-content {
+    flex: 1;
+}
+.reason-title {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.02em;
+}
+.reason-bar {
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.3rem;
+}
+.reason-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    transition: width 1s ease-out;
+}
+.reason-percentage {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    font-weight: 600;
+}
+
+/* HEALTHY SECTION */
+.healthy-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #d5f4e6, #c3e6cb);
+    border-radius: 15px;
+}
+.healthy-section h3 {
+    color: #27ae60;
+    margin-bottom: 1rem;
+    font-size: 1.3em;
+}
+.healthy-card {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    border-left: 5px solid #27ae60;
+    box-shadow: 0 4px 12px rgba(39,174,96,0.2);
+}
+.healthy-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8em;
+    flex-shrink: 0;
+}
+.healthy-content {
+    flex: 1;
+}
+.healthy-content h4 {
+    color: #27ae60;
+    margin-bottom: 0.8rem;
+    font-size: 1.2em;
+}
+.healthy-content p {
+    color: #555;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+.habits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.habit-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    text-align: center;
+}
+.habit-item i {
+    font-size: 1.8em;
+    color: #27ae60;
+    margin-bottom: 0.5rem;
+}
+.habit-item span {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    margin-bottom: 0.3rem;
+}
+.habit-item strong {
+    font-size: 1.1em;
+    color: #2c3e50;
+}
+
+.results-content {
+    animation: fadeIn 0.6s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-placeholder {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: #7f8c8d;
+}
+.welcome-placeholder h3 {
+    color: #34495e;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .reason-grid { grid-template-columns: 1fr; }
+    .habits-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
