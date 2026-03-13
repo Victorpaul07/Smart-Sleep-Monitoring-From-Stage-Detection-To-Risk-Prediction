@@ -2,15 +2,15 @@
 
 # Smart Sleep Monitoring System
 
-AI-powered web application for sleep stage detection from PSG/EEG data and lifestyle-based sleep disorder risk prediction. Developed for my Btech CSE(AIML) final year Major Project. Achieves 94% CNN-LSTM sleep staging accuracy and 82.7% hybrid RF-SVM disorder prediction.
+AI-powered web application for sleep stage detection from PSG/EEG data and lifestyle-based sleep disorder risk prediction. Developed during my Btech CSE(AIML) final year Major Project. Achieves 94% CNN-LSTM sleep staging accuracy and 82.7% hybrid RF-SVM disorder prediction.
 
 ## ✨ Features
 
-- Sleep Stage Analysis**: CNN-LSTM model processes PSG EDF files → Wake (W), N1, N2, N3, REM detection
-- Disorder Risk Prediction**: Hybrid RF+SVM VotingClassifier predicts None/Insomnia/Apnea from 11 lifestyle features
-- Interactive Dashboard**: File upload + form inputs → instant visualizations (confusion matrices, PRF scores, feature importance)
-- User Authentication**: Registration, login, profile management with SQLite backend
-- Production Ready**: Model persistence (.h5/.joblib), responsive UI, loading animations
+- Sleep Stage Analysis: CNN-LSTM model processes PSG EDF files → Wake (W), N1, N2, N3, REM detection
+- Disorder Risk Prediction: Hybrid RF+SVM VotingClassifier predicts None/Insomnia/Apnea from 11 lifestyle features
+- Interactive Dashboard: File upload + form inputs → instant visualizations (confusion matrices, PRF scores, feature importance)
+- User Authentication: Registration, login, profile management with SQLite backend
+- Production Ready: Model persistence (.h5/.joblib), responsive UI, loading animations
 
 ## 📊 Model Performance Highlights
 
